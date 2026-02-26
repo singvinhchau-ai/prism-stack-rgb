@@ -6,7 +6,8 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Block Blast - LED RGB Edition</title>
+    <meta name="theme-color" content="#0a0a0a">
+    <title> PrismStack RGB</title>
     <style>
         * {
             margin: 0;
@@ -19,36 +20,50 @@
             -ms-user-select: none;
             user-select: none;
         }
+        
+        /* Prevent white background */
+        html {
+            background: #0a0a0a;
+        }
 
         html, body {
             overscroll-behavior: none;
             touch-action: pan-x pan-y;
             -webkit-overflow-scrolling: touch;
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+            background-attachment: fixed;
             color: #fff;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            min-height: -webkit-fill-available;
             overflow-x: hidden;
+            overflow-y: auto;
             position: relative;
         }
 
         /* Animated background */
         body::before {
             content: '';
-            position: absolute;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(138, 43, 226, 0.05) 0%, transparent 50%),
-                        radial-gradient(circle, rgba(0, 255, 255, 0.05) 0%, transparent 50%);
-            animation: bgRotate 20s linear infinite;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 50%, rgba(138, 43, 226, 0.05) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 50%, rgba(0, 255, 255, 0.05) 0%, transparent 50%);
             z-index: 0;
+            pointer-events: none;
         }
         
         /* Disable heavy animations on mobile */
@@ -74,6 +89,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
         }
 
         h1 {
@@ -174,14 +192,14 @@
                 #14b8a6 100%
             );
             background-size: 200% 200%;
-            animation: ledPulse 3s ease-in-out infinite, popIn 0.3s ease-out;
+            animation: ledPulse 3s ease-in-out infinite;
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
-        /* Simplified animation for mobile */
+        /* Slower animation on mobile for performance */
         @media (hover: none) and (pointer: coarse) {
             .cell.filled {
-                animation: ledPulseMobile 5s linear infinite, popIn 0.3s ease-out;
+                animation: ledPulseMobile 5s linear infinite !important;
             }
         }
         
@@ -237,6 +255,16 @@
             border: 1px solid rgba(168, 85, 247, 0.8);
             transform: scale(0.95);
             transition: all 0.15s ease;
+        }
+        
+        /* Disable preview animation on mobile */
+        @media (hover: none) and (pointer: coarse) {
+            .cell.preview {
+                animation: none;
+                opacity: 0.7;
+                transform: scale(1);
+                background: rgba(168, 85, 247, 0.6);
+            }
         }
         
         .cell.snap-preview {
@@ -559,10 +587,23 @@
             }
         }
 
-        /* Mobile styles */
+        /* Mobile specific fixes for full screen */
         @media (max-width: 600px) {
+            html {
+                height: -webkit-fill-available;
+            }
+            
+            body {
+                min-height: 100vh;
+                min-height: -webkit-fill-available;
+            }
+            
             .container {
                 padding: 8px 5px;
+                min-height: auto;
+                justify-content: flex-start;
+                padding-top: max(env(safe-area-inset-top), 20px);
+                padding-bottom: max(env(safe-area-inset-bottom), 20px);
             }
 
             h1 {
@@ -571,14 +612,15 @@
             }
 
             #gameBoard {
-                width: min(350px, 92vw);
-                gap: 2px;
-                padding: 8px;
+                width: min(370px, 94vw);
+                gap: 3px;
+                padding: 10px;
                 margin: 15px auto;
             }
 
             .cell {
-                border-width: 0.5px;
+                border-width: 1px;
+                min-height: 40px;
             }
 
             .block-cell {
@@ -691,18 +733,46 @@
             }
         }
 
-        /* Performance optimization for mobile */
+        /* Performance optimization for mobile - disable heavy animations */
         @media (hover: none) and (pointer: coarse) {
+            /* Static gradient on mobile - no animation */
             .cell.filled {
-                animation: ledPulse 4s ease-in-out infinite;
+                animation: none !important;
+                background: linear-gradient(135deg, #a855f7 0%, #6366f1 50%, #06b6d4 100%);
             }
             
             body::before {
-                animation-duration: 30s;
+                display: none;
             }
             
             h1 {
-                animation-duration: 4s;
+                animation: none;
+                background: linear-gradient(90deg, #ff00ff, #00ffff);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            
+            .block-cell::before {
+                display: none;
+            }
+            
+            /* Instant clearing - no animation */
+            .cell.clearing {
+                animation: none !important;
+                opacity: 0;
+            }
+            
+            /* Remove all transitions */
+            .cell {
+                transition: none !important;
+            }
+            
+            .block-container {
+                transition: none !important;
+            }
+            
+            .cell.preview {
+                animation: none !important;
             }
         }
         @media (max-height: 600px) and (orientation: landscape) {
@@ -766,7 +836,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>✨ BLOCK BLAST ✨</h1>
+        <h1>✨  PrismStack RGB ✨</h1>
         
         <div class="score-board">
             <div class="score-item">
@@ -779,7 +849,7 @@
             </div>
         </div>
 
-        <div id="gameBoard"></div>
+        <div id="gameBoard"></div>Prism Stack RGB
         <div id="blockTray"></div>
 
         <div class="footer">
@@ -987,33 +1057,15 @@
             const validPos = findNearestValidPosition(draggedBlock, targetRow, targetCol);
             
             if (validPos) {
-                // Show snap feedback
-                if (validPos.row !== targetRow || validPos.col !== targetCol) {
-                    // Briefly show where it snapped to
-                    showPreview(validPos.row, validPos.col);
-                    setTimeout(() => {
-                        placeBlock(draggedBlock, validPos.row, validPos.col);
-                        removeBlockFromTray();
-                        clearPreview();
-                        checkAndClearLines();
-                        
-                        if (availableBlocks.length === 0) {
-                            setTimeout(generateNewBlocks, 500);
-                        } else {
-                            checkGameOver();
-                        }
-                    }, 100);
+                placeBlock(draggedBlock, validPos.row, validPos.col);
+                removeBlockFromTray();
+                clearPreview();
+                checkAndClearLines();
+                
+                if (availableBlocks.length === 0) {
+                    setTimeout(generateNewBlocks, 500);
                 } else {
-                    placeBlock(draggedBlock, validPos.row, validPos.col);
-                    removeBlockFromTray();
-                    clearPreview();
-                    checkAndClearLines();
-                    
-                    if (availableBlocks.length === 0) {
-                        setTimeout(generateNewBlocks, 500);
-                    } else {
-                        checkGameOver();
-                    }
+                    checkGameOver();
                 }
             } else {
                 if (draggedElement) {
@@ -1039,9 +1091,12 @@
             
             touchClone = touchElement.cloneNode(true);
             touchClone.style.position = 'fixed';
-            touchClone.style.opacity = '0.7';
+            touchClone.style.opacity = '0.8';
             touchClone.style.pointerEvents = 'none';
             touchClone.style.zIndex = '1000';
+            touchClone.style.left = '0';
+            touchClone.style.top = '0';
+            touchClone.style.willChange = 'transform';
             document.body.appendChild(touchClone);
             
             updateTouchClonePosition(e.touches[0]);
@@ -1053,7 +1108,7 @@
         let touchMoveScheduled = false;
         let pendingTouchMove = null;
         let touchPreviewThrottleTime = 0;
-        const TOUCH_THROTTLE = 50; // 50ms throttle for touch
+        const TOUCH_THROTTLE = 100; // Increase to 100ms for better performance
         
         function handleTouchMove(e) {
             e.preventDefault();
@@ -1117,31 +1172,14 @@
                 const validPos = findNearestValidPosition(touchBlock, targetRow, targetCol);
                 
                 if (validPos) {
-                    // Show snap feedback
-                    if (validPos.row !== targetRow || validPos.col !== targetCol) {
-                        showPreview(validPos.row, validPos.col);
-                        setTimeout(() => {
-                            placeBlock(touchBlock, validPos.row, validPos.col);
-                            removeBlockFromTray(touchElement);
-                            clearPreview();
-                            checkAndClearLines();
-                            
-                            if (availableBlocks.length === 0) {
-                                setTimeout(generateNewBlocks, 500);
-                            } else {
-                                checkGameOver();
-                            }
-                        }, 100);
+                    placeBlock(touchBlock, validPos.row, validPos.col);
+                    removeBlockFromTray(touchElement);
+                    checkAndClearLines();
+                    
+                    if (availableBlocks.length === 0) {
+                        setTimeout(generateNewBlocks, 500);
                     } else {
-                        placeBlock(touchBlock, validPos.row, validPos.col);
-                        removeBlockFromTray(touchElement);
-                        checkAndClearLines();
-                        
-                        if (availableBlocks.length === 0) {
-                            setTimeout(generateNewBlocks, 500);
-                        } else {
-                            checkGameOver();
-                        }
+                        checkGameOver();
                     }
                 } else {
                     if (touchElement) {
@@ -1164,8 +1202,9 @@
 
         function updateTouchClonePosition(touch) {
             if (!touchClone) return;
-            touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
-            touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
+            const x = touch.clientX - touchClone.offsetWidth / 2;
+            const y = touch.clientY - touchClone.offsetHeight / 2;
+            touchClone.style.transform = `translate3d(${x}px, ${y}px, 0)`;
         }
 
         function findNearestValidPosition(block, targetRow, targetCol) {
@@ -1174,15 +1213,15 @@
                 return { row: targetRow, col: targetCol };
             }
             
-            // Search in expanding radius around target position
-            const maxRadius = 2; // Search up to 2 cells away
+            // Expanded search - 2 cells radius for easier mobile placement
+            const maxRadius = 2;
             
             for (let radius = 1; radius <= maxRadius; radius++) {
-                // Check positions in a square around target
+                // Check all positions at current radius
                 for (let dr = -radius; dr <= radius; dr++) {
                     for (let dc = -radius; dc <= radius; dc++) {
-                        // Skip if not on the edge of current radius (already checked in previous iteration)
-                        if (Math.abs(dr) !== radius && Math.abs(dc) !== radius) continue;
+                        // Skip interior (already checked in previous radius)
+                        if (radius > 1 && Math.abs(dr) < radius && Math.abs(dc) < radius) continue;
                         
                         const newRow = targetRow + dr;
                         const newCol = targetCol + dc;
@@ -1217,8 +1256,7 @@
         }
 
         function placeBlock(block, startRow, startCol) {
-            const cellsToUpdate = [];
-            
+            // Update both grid and DOM immediately
             for (let i = 0; i < block.length; i++) {
                 for (let j = 0; j < block[i].length; j++) {
                     if (block[i][j]) {
@@ -1227,18 +1265,11 @@
                         grid[row][col] = 1;
                         const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
                         if (cell) {
-                            cellsToUpdate.push(cell);
+                            cell.classList.add('filled');
                         }
                     }
                 }
             }
-            
-            // Batch DOM update
-            requestAnimationFrame(() => {
-                cellsToUpdate.forEach(cell => {
-                    cell.classList.add('filled');
-                });
-            });
             
             updateScore(currentScore + block.flat().filter(x => x).length * 10);
         }
@@ -1339,30 +1370,25 @@
                     showCombo(clearedLines);
                 }
 
-                // Collect cells and apply animations in batch
-                const cellElements = [];
+                // Instant clear on mobile, quick on desktop
                 cellsToClear.forEach(coord => {
                     const [row, col] = coord.split('-').map(Number);
+                    grid[row][col] = 0;
                     const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
                     
                     if (cell) {
-                        cellElements.push({ cell, row, col });
-                    }
-                });
-                
-                // Batch DOM updates
-                requestAnimationFrame(() => {
-                    cellElements.forEach(({ cell, row, col }) => {
-                        cell.classList.add('clearing');
-                        createParticles(cell);
-                        
-                        setTimeout(() => {
-                            grid[row][col] = 0;
-                            requestAnimationFrame(() => {
+                        if (isMobileDevice) {
+                            // Instant clear - no animation
+                            cell.classList.remove('filled');
+                        } else {
+                            // Desktop - with animation
+                            cell.classList.add('clearing');
+                            createParticles(cell);
+                            setTimeout(() => {
                                 cell.classList.remove('filled', 'clearing');
-                            });
-                        }, 600);
-                    });
+                            }, 300);
+                        }
+                    }
                 });
 
                 // Calculate score with combo bonus
@@ -1373,21 +1399,21 @@
         }
 
         function createParticles(element) {
+            // Skip particles on mobile for performance
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile) return;
+            
             const rect = element.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
             
-            // Detect mobile device
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            const particleCount = isMobile ? 4 : 8; // Reduce particles on mobile
-            
             const particles = [];
-            for (let i = 0; i < particleCount; i++) {
+            for (let i = 0; i < 6; i++) {
                 const particle = document.createElement('div');
                 particle.className = 'particle';
                 
-                const angle = (Math.PI * 2 * i) / particleCount;
-                const distance = isMobile ? 40 : 50 + Math.random() * 50;
+                const angle = (Math.PI * 2 * i) / 6;
+                const distance = 40;
                 const tx = Math.cos(angle) * distance;
                 const ty = Math.sin(angle) * distance;
                 
@@ -1404,7 +1430,7 @@
             requestAnimationFrame(() => {
                 particles.forEach(particle => {
                     document.body.appendChild(particle);
-                    setTimeout(() => particle.remove(), 1000);
+                    setTimeout(() => particle.remove(), 800);
                 });
             });
         }
